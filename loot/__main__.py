@@ -1,6 +1,7 @@
 """python -m loot                      the six checks, every design
 python -m loot show 01 naive        one broken ordering, statement by statement
 python -m loot saves                state in memory, saved one character at a time
+python -m loot generated            handlers written by language models, through the same checks
 python -m loot numbers              the arithmetic, with your own values
 """
 
@@ -8,7 +9,7 @@ from __future__ import annotations
 
 import argparse
 
-from . import report
+from . import generated, report
 from .checks import CHECKS
 
 
@@ -26,6 +27,10 @@ def main(argv: list[str] | None = None) -> int:
     show.add_argument("problem", nargs="?", default="", help="pick an ordering whose problem contains this text")
 
     commands.add_parser("saves", help="state in memory, saved one character at a time")
+
+    written = commands.add_parser("generated", help="handlers written by language models, through the same checks")
+    written.add_argument("name", nargs="?", help="a handler's name, to see one of its broken orderings")
+    written.add_argument("check", nargs="?", default="01", help="the check to show: 01, 02, 03, 04 or 2x (default 01)")
 
     numbers = commands.add_parser("numbers", help="the arithmetic behind the talk, with your own values")
     numbers.add_argument("--chance", type=float, help="add your own chance per attempt, for example 0.005")
@@ -46,6 +51,8 @@ def main(argv: list[str] | None = None) -> int:
         print(report.show(args.check, args.design, args.problem))
     elif args.command == "saves":
         print(report.saves_detail())
+    elif args.command == "generated":
+        print(generated.show(args.name, args.check) if args.name else generated.table())
     elif args.command == "numbers":
         print(
             report.numbers_text(

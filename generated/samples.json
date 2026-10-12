@@ -1,0 +1,58 @@
+[
+  {
+    "file": "fable-plain.py",
+    "model": "claude-fable-5-1",
+    "prompt": "plain",
+    "tables": {}
+  },
+  {
+    "file": "haiku-plain.py",
+    "model": "claude-haiku-5-5",
+    "prompt": "plain",
+    "tables": {
+      "purchases": [
+        "op_id"
+      ]
+    }
+  },
+  {
+    "file": "opus-plain.py",
+    "model": "claude-opus-5-5",
+    "prompt": "plain",
+    "tables": {
+      "purchases": [
+        "op_id"
+      ]
+    }
+  },
+  {
+    "file": "sonnet-plain.py",
+    "model": "claude-sonnet-5-5",
+    "prompt": "plain",
+    "tables": {}
+  },
+  {
+    "file": "fable-with-requirements.py",
+    "model": "claude-fable-5-1",
+    "prompt": "with requirements",
+    "tables": {}
+  },
+  {
+    "file": "haiku-with-requirements.py",
+    "model": "claude-haiku-5-5",
+    "prompt": "with requirements",
+    "tables": {}
+  },
+  {
+    "file": "opus-with-requirements.py",
+    "model": "claude-opus-5-5",
+    "prompt": "with requirements",
+    "tables": {}
+  },
+  {
+    "file": "sonnet-with-requirements.py",
+    "model": "claude-sonnet-5-5",
+    "prompt": "with requirements",
+    "tables": {}
+  }
+]

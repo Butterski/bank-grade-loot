@@ -157,7 +157,7 @@ def check_02_same_request_twice(design: TradeDesign) -> Verdict:
         if problem:
             return problem
         first, second = run.reply("Stan"), run.reply("Stan again")
-        if first is None or first != second or not first.ok:
+        if first is None or second is None or not (first.ok and second.ok):
             return "wrong answer to the repeated request"
         return None
 

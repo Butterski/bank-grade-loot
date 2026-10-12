@@ -22,6 +22,10 @@ from .db import ModelError, Statement, UniqueViolation
 Handler = Generator[Statement, Any, Any]
 Choice = tuple[str, str]  # ("run" | "crash", process name)
 
+# Guards against a handler that never ends, such as a retry loop that can spin forever.
+MAX_STEPS = 500
+MAX_RUNS = 2_000_000
+
 
 @dataclass
 class Process:
@@ -118,6 +122,8 @@ class Run:
         if txn is not None and not txn.implicit and txn not in live.txns:
             live.txns.append(txn)
         self.trace.append(Step(name, statement.sql, result))
+        if len(self.trace) > MAX_STEPS:
+            raise ModelError(f"a run did not finish within {MAX_STEPS} statements")
         try:
             live.pending = live.gen.throw(error) if error else live.gen.send(result)
         except StopIteration as stop:
@@ -132,7 +138,10 @@ class Run:
         self.crashes_left -= 1
         self.trace.append(Step(live.spec.name, "-- the process stops here --", crash=True))
         live.roll_back()
-        live.gen.close()
+        try:
+            live.gen.close()
+        except RuntimeError:
+            pass  # the handler tried to carry on after the process was gone; it does not get to
         live.crashes += 1
         if live.spec.restarts:
             live.boot()
@@ -174,7 +183,11 @@ def explore(scenario: Scenario, max_crashes: int = 0) -> Iterator[Run]:
     is executed from the beginning.
     """
     todo: list[tuple[Choice, ...]] = [()]
+    finished = 0
     while todo:
+        finished += 1
+        if finished > MAX_RUNS:
+            raise ModelError(f"more than {MAX_RUNS:,} orderings: the scenario is too large to check")
         world, processes = scenario()
         run = Run(world, processes, max_crashes)
         for choice in todo.pop():

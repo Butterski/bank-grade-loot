@@ -39,6 +39,7 @@ python -m loot
 | `python -m loot` | The six checks against every design |
 | `python -m loot show 01 naive` | One broken ordering, statement by statement |
 | `python -m loot saves` | A server that keeps the world in memory, and stops |
+| `python -m loot generated` | The trade as four language models wrote it, and how they were asked |
 | `python -m loot numbers` | The arithmetic, with your own values |
 
 ## What it finds
@@ -239,6 +240,7 @@ It is exhaustive, not random: if a bad ordering exists in the model, it is found
 | [`loot/checks.py`](loot/checks.py) | The six checks |
 | [`loot/saves.py`](loot/saves.py) | State in memory, saved one character at a time |
 | [`loot/numbers.py`](loot/numbers.py) | The arithmetic |
+| [`loot/generated.py`](loot/generated.py) | Loads the handlers that models wrote, unchanged |
 
 ## Try your own design
 
@@ -279,6 +281,59 @@ It holds check 01: the lock on the sword puts the two buyers in a queue. Then "O
 from spending the same 100 coins twice.
 
 </details>
+
+## Asking a model to write it
+
+Asked what the most common mistake on the servers he dupes is, a well-known duper answered: "they use ai to create
+their own plugins that allow us to exploit very easily".
+
+Here is a way to ask that worked for four models out of four:
+
+1. **Give the model the documentation.** Paste what your code talks to: the calls, what they return, and what the
+   database does when two requests meet.
+2. **Say what happens on a live server.** Four sentences were enough:
+
+   > 1. Two players press Buy on the same item at the same moment. One of them gets it. The other one keeps his coins.
+   > 2. The same request arrives twice, with the same buyer and the same `op_id`, possibly at the same moment. The purchase happens once, and both requests get the same answer.
+   > 3. The server process stops between any two database calls. No half-finished purchase remains.
+   > 4. One player sends two different purchases at the same moment. He does not spend coins that he does not have.
+
+3. **Run the checks on what comes back.** A prompt raises the odds. Only a check tells you what you got.
+
+The four sentences are the checks of this repository in plain words. The whole prompt is in
+[`generated/prompt-with-requirements.md`](generated/prompt-with-requirements.md).
+
+### What happened when four models were asked
+
+Each model wrote the trade twice: from a short request that carried the documentation, and from the same request
+with the four sentences. Their code is in [`generated/samples`](generated/samples), exactly as they wrote it, and it
+goes through the same checks as every other design here.
+
+| Prompt | Model | 01<br>Two buyers | 02<br>Sent twice | 03<br>Stops early | 04<br>Reply lost | 2x<br>One wallet, two purchases |
+|---|---|:-:|:-:|:-:|:-:|:-:|
+| plain | claude-fable-5-1 | ✅ | ❌ | ✅ | ❌ | ✅ |
+| plain | claude-haiku-5-5 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| plain | claude-opus-5-5 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| plain | claude-sonnet-5-5 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| with requirements | claude-fable-5-1 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| with requirements | claude-haiku-5-5 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| with requirements | claude-opus-5-5 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| with requirements | claude-sonnet-5-5 | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+```bash
+python -m loot generated
+```
+
+- With the four sentences, all four handlers pass every scenario.
+- Without them, three of four still do. The fourth tells a repeated request "you already own this item" about a
+  purchase that went through. The model said so itself in a comment: nothing in the short request gave it a place
+  to keep a result. Two of the others made up a table for that on their own.
+- With either prompt, no handler duplicated the sword, let a balance go below zero or left half a trade behind.
+
+This is one answer per model and prompt, written on 12 October 2026: an anecdote, not a benchmark. Both prompts
+carried the documentation, so it says nothing about a request that comes without it. And the four sentences were
+tried on this trade only. [`generated/README.md`](generated/README.md) has the replies and the limits, and says how
+to try the model you use.
 
 ## What this is, and what it is not
 
