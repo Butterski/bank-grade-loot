@@ -1,0 +1,18 @@
+[project]
+name = "bank-grade-loot"
+version = "0.1.0"
+description = "Executable models for the talk Bank-Grade Loot: Preventing Dupes in Game Backends"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Miłosz Kucharski" }]
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
