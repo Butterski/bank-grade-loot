@@ -1,0 +1,24 @@
+{
+  "skill_name": "finding-dupes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Over the weekend two players reported that they each had a Crimson Blade (item 9041) after trading it once, and our gem numbers look wrong too. Our backend is in evals/files/game_backend.py (Python, PostgreSQL through psycopg2, plus the in-memory world server). Review it for duplication bugs: tell me what is wrong, where exactly, how a player would trigger each one, and how bad each one is. Do not change the code. Write the review to review.md.",
+      "expected_output": "A review in the finding-dupes template that lists every value path, quotes the storage facts (autocommit, the retry decorator, per-player saves), and names each planted problem with a line reference and the ordering that breaks it: buy_item reads the owner and writes without a lock (01) and writes back a computed balance; no operation ID and a retry decorator that re-runs the handler (02, 04); autocommit makes the two updates separate transactions (03); grants are unique per event ID, not per purchase, and look-then-insert has no constraint (05); the purchase is saved and the wallet called with no outbox or reconciler (06); refund in the trading-disabled branch creates coins without a payment; the in-memory trade with per-player saves duplicates an item after a crash between saves, and the daily cooldown is in the state saved later. Ranked worst first, no code changed.",
+      "files": ["evals/files/game_backend.py"],
+      "expectations": [
+        "The review says buy_item reads items.owner_id with a plain SELECT and then updates it with nothing (no FOR UPDATE, no conditional WHERE owner_id = seller) between the read and the write, and gives a line reference",
+        "The review says the buyer's and seller's coins are written back as a computed number (UPDATE ... SET coins = %s with a value read earlier) and that two requests can lose or create coins that way",
+        "The review says there is no operation or request ID, so a repeated request runs the trade again, and that the retry decorator re-runs the whole handler",
+        "The review says autocommit is on (conn.autocommit = True) so the statements of buy_item are separate transactions and a stop between them leaves a half-finished trade",
+        "The review says grants are unique per event_id and that the same purchase under a new event ID (resend_unacknowledged generates one) is granted again, and that the check-then-insert in grant_gems has no constraint protecting it",
+        "The review says complete_purchase saves the purchase and then calls the wallet with nothing that survives a crash between the two (no outbox, no reconciler), so a paid purchase can have no grant",
+        "The review says request_trade refunds coins when trading is disabled without any payment having been taken, so the disabled path creates coins",
+        "The review says WorldServer.trade changes two players in memory while each player is saved on its own, so a stop between the two saves leaves the item in two save files or in none",
+        "The review gives at least one explicit ordering as numbered steps that ends with a duplicate or a loss",
+        "The review contains a per-path table or list with verdicts using the words holds, breaks and cannot tell",
+        "The review does not modify game_backend.py and does not propose a rewritten version of the whole file"
+      ]
+    }
+  ]
+}

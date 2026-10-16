@@ -1,0 +1,21 @@
+{
+  "skill_name": "designing-trades",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We are adding player-to-player trading to our game backend: player A sells one item to player B for N gold, from a trade window where both are online. Python with psycopg 3 on PostgreSQL, no ORM. The current schema is in evals/files/schema.sql. Write the schema changes (as SQL), the server-side handler for the sale, and the tests you would write for it. Save them as schema.sql, trade.py and test_trade.py.",
+      "expected_output": "A design that survives every ordering: an operations table keyed on (caller, op_id) claimed first with INSERT ... ON CONFLICT DO NOTHING and a stored result returned on repeats; the item and both players locked with SELECT ... FOR UPDATE in a fixed order (or conditional updates whose row counts are checked); checks after the locks; gold changed by arithmetic in SQL; two ledger rows; everything in one transaction with the reply after COMMIT; tests for the four sentences (two buyers at once, the same request twice, a stop before commit, one wallet in two purchases).",
+      "files": ["evals/files/schema.sql"],
+      "expectations": [
+        "schema.sql adds a table for operations or idempotency keyed on the caller and a request/operation ID (a primary key or unique constraint on the pair, or equivalent) with a column for the stored result",
+        "The handler inserts or claims the operation row before it locks or changes items or gold, and on a conflict returns the stored result of the earlier run instead of trading again or raising",
+        "The handler locks the item row and both players' rows with SELECT ... FOR UPDATE in a fixed, documented order (for example players sorted by id), or uses conditional UPDATE ... WHERE statements and checks the number of rows affected",
+        "Ownership and both gold balances change inside one transaction that ends with a single COMMIT, and the reply to the client is produced after the commit",
+        "Gold is changed by arithmetic in the SQL statement (gold = gold - N / gold + N), not by writing back a number read earlier, and the buyer's ability to pay is checked after the lock or enforced by the statement",
+        "A ledger or transfer-log table receives a row per side of the transfer (buyer minus N, seller plus N) in the same transaction",
+        "The tests cover at least three of: two buyers for the same item at the same moment, the same request sent twice, the process stopping before COMMIT, one player in two purchases at the same moment",
+        "The test for the repeated request expects one transfer and the same successful answer for both copies"
+      ]
+    }
+  ]
+}

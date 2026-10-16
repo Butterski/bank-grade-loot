@@ -241,7 +241,7 @@ It is exhaustive, not random: if a bad ordering exists in the model, it is found
 | [`loot/saves.py`](loot/saves.py) | State in memory, saved one character at a time |
 | [`loot/numbers.py`](loot/numbers.py) | The arithmetic |
 | [`loot/generated.py`](loot/generated.py) | Loads the handlers that models wrote, unchanged |
-| [`skills/dupe-check/SKILL.md`](skills/dupe-check/SKILL.md) | The six checks as a skill for a coding agent |
+| [`skills/`](skills) | Three skills for a coding agent: designing trades, finding dupes, planning the fixes |
 
 ## Try your own design
 
@@ -336,24 +336,28 @@ carried the documentation, so it says nothing about a request that comes without
 tried on this trade only. [`generated/README.md`](generated/README.md) has the replies and the limits, and says how
 to try the model you use.
 
-## A skill for your coding agent
+## Three skills for your coding agent
 
-The six checks, the three rules and the four sentences above are also a *skill*: a short file that a coding agent
-reads before it touches code that moves value. It is [`skills/dupe-check/SKILL.md`](skills/dupe-check/SKILL.md).
+The checks, the reference design and the fix catalogue are also *skills*: short files that a coding agent reads
+before it touches code that moves value. Each is a folder with a `SKILL.md`, in the
+[Agent Skills](https://agentskills.io) format that Claude Code and other agents read.
 
-With Claude Code, copy the folder into your project. The agent then uses it on its own when a trade, a shop or a
-wallet comes up, and when you ask it to check for dupes:
+| Skill | What the agent does with it | It triggers when you |
+|---|---|---|
+| [`designing-trades`](skills/designing-trades/SKILL.md) | Writes the four sentences first, then the schema and the handler in the reference order: claim the operation ID, lock in a fixed order, check, write, commit, confirm. Outbox and reconciler for paid purchases; the state split for worlds in memory. | add or change trading, shops, wallets, rewards, saves |
+| [`finding-dupes`](skills/finding-dupes/SKILL.md) | Lists every path that moves value (a bundled scanner finds the candidates), quotes how the database behaves, answers the six checks per path with file and line, the shortest ordering that breaks it, and the smallest fix. | ask for a review, or report a dupe |
+| [`planning-dupe-fixes`](skills/planning-dupe-fixes/SKILL.md) | Turns the findings into a plan: what to switch off and what not to, the order of the fixes and their migrations, the clean-up of the damage already out there, one test per fix, what to tell support. | ask what to do about the findings |
+
+With Claude Code, copy the folders into your project; the agent then uses them on its own when the subject comes
+up, and you can also call them by name (`/finding-dupes`):
 
 ```bash
-cp -r skills/dupe-check /path/to/your-game/.claude/skills/
+cp -r skills/finding-dupes skills/designing-trades skills/planning-dupe-fixes /path/to/your-game/.claude/skills/
 ```
 
-Other agents that read the Agent Skills format (a folder with a `SKILL.md`) take the same folder.
-
-What the skill makes the agent do: list every path that creates, moves, consumes or restores value; read how the
-database behaves before judging; answer the six questions for each path with a file and a line; report *holds*,
-*breaks* or *cannot tell*, with the shortest ordering that breaks it and the smallest fix. It does not make code
-safe. It makes the checks part of the review, every time, which is the cheapest answer to the duper's remark.
+They do not make code safe. They make the four sentences and the six checks part of every design, review and
+plan, which is the cheapest answer to the duper's remark. Each skill folder carries a test prompt in `evals/`, with
+the planted bugs it is expected to find; `tests/test_skill.py` keeps the skills in step with the model.
 
 ## What this is, and what it is not
 

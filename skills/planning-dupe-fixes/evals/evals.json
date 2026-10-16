@@ -1,0 +1,24 @@
+{
+  "skill_name": "planning-dupe-fixes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Here is the dupe review of our shop and trade code: evals/files/review.md. About 300 players already have a duplicated Crimson Blade and some were granted gems twice. Our team is four backend engineers. Give me a fix plan for the next two weeks: what we do today, the order of the fixes and why, what each fix needs (schema, client, data), how we clean up the damage that is already out there, and what we tell support. Write it to plan.md. Do not write the code yet.",
+      "expected_output": "A plan in the planning-dupe-fixes template: findings ranked with the duplicating ones first (the save split, the two-buyers race, the double grant) and the trigger named; a decision on switching trading off that is narrow and mentions testing the disabled path (the refund bug lives there); fixes in dependency order (measure first; operations table claimed first, server side before client; unique grant per purchase after the double grants are cleaned up; outbox and reconciler with the reconciler report-only first; the state split last); per fix the change, migration, clean-up, proof test and S/M/L effort; clean-up queries and a correcting-entries policy (creators before receivers, no world rollback); a support section; open questions.",
+      "files": ["evals/files/review.md"],
+      "expectations": [
+        "The plan ranks the findings and puts the ones that duplicate an item or currency (the in-memory trade with split saves, the two-buyers race, the double grant via a new event ID) above the ones that only lose value or give a wrong answer",
+        "The plan makes an explicit decision about switching trading off (narrow switch, or none, with a reason) and notes that the disabled path itself must be fixed or tested first because the refund bug lives in it",
+        "The plan schedules read-only measurement queries (double owners, double grants, purchases without grants) before any change",
+        "The plan puts the operations/idempotency table in before the client-side request ID rollout, with the server tolerating requests that carry no ID",
+        "The plan cleans up the existing double grants before adding the UNIQUE (provider, purchase_id) constraint",
+        "Every fix in the plan names the test that proves it (two buyers at once, same request twice, stop before commit, reply lost and retry, same event twice and under a new event ID, stop between purchase and send), aligned with the finding's check",
+        "The plan states a correction policy of ledger or correcting entries rather than a rollback of the world, and removes duplicated items from the accounts that created them before accounts that only received them",
+        "The plan treats the state split of the world server as the largest item and sequences it after the database-side fixes, with the trade going through the database first and a pending state until the commit",
+        "Effort is given as S/M/L (or days) with dependencies between steps, not as hourly rates, and the plan fits the stated team and two weeks or says what does not fit",
+        "There is a section for support and players (who is affected, what they see, what to say)",
+        "The plan contains no implementation code beyond SQL snippets for migrations or clean-up queries"
+      ]
+    }
+  ]
+}

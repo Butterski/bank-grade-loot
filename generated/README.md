@@ -24,8 +24,9 @@ python -m loot generated fable-plain 02
 For another operation, say the same four things about it: two requests for the same thing, the same request twice,
 a stop halfway, one account in two operations. Here they were tried on the trade only.
 
-The same four sentences, the six checks and a review procedure are packaged as a skill for a coding agent:
-[`../skills/dupe-check/SKILL.md`](../skills/dupe-check/SKILL.md).
+The same four sentences open the design skill for a coding agent,
+[`../skills/designing-trades/SKILL.md`](../skills/designing-trades/SKILL.md); its two companions review code
+and plan the fixes.
 
 ## The two prompts
 
