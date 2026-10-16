@@ -241,6 +241,7 @@ It is exhaustive, not random: if a bad ordering exists in the model, it is found
 | [`loot/saves.py`](loot/saves.py) | State in memory, saved one character at a time |
 | [`loot/numbers.py`](loot/numbers.py) | The arithmetic |
 | [`loot/generated.py`](loot/generated.py) | Loads the handlers that models wrote, unchanged |
+| [`skills/dupe-check/SKILL.md`](skills/dupe-check/SKILL.md) | The six checks as a skill for a coding agent |
 
 ## Try your own design
 
@@ -334,6 +335,25 @@ This is one answer per model and prompt, written on 12 October 2026: an anecdote
 carried the documentation, so it says nothing about a request that comes without it. And the four sentences were
 tried on this trade only. [`generated/README.md`](generated/README.md) has the replies and the limits, and says how
 to try the model you use.
+
+## A skill for your coding agent
+
+The six checks, the three rules and the four sentences above are also a *skill*: a short file that a coding agent
+reads before it touches code that moves value. It is [`skills/dupe-check/SKILL.md`](skills/dupe-check/SKILL.md).
+
+With Claude Code, copy the folder into your project. The agent then uses it on its own when a trade, a shop or a
+wallet comes up, and when you ask it to check for dupes:
+
+```bash
+cp -r skills/dupe-check /path/to/your-game/.claude/skills/
+```
+
+Other agents that read the Agent Skills format (a folder with a `SKILL.md`) take the same folder.
+
+What the skill makes the agent do: list every path that creates, moves, consumes or restores value; read how the
+database behaves before judging; answer the six questions for each path with a file and a line; report *holds*,
+*breaks* or *cannot tell*, with the shortest ordering that breaks it and the smallest fix. It does not make code
+safe. It makes the checks part of the review, every time, which is the cheapest answer to the duper's remark.
 
 ## What this is, and what it is not
 
